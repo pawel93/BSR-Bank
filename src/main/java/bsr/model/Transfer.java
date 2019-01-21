@@ -1,14 +1,9 @@
 package bsr.model;
 
-import javax.xml.bind.annotation.XmlAccessType;
-import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
-import java.io.Serializable;
 
-/**
- * Created by Paweł on 2017-01-12.
- */
+
 
 @XmlRootElement
 //@XmlAccessorType(XmlAccessType.FIELD)

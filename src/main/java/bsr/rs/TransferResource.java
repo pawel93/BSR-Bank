@@ -1,8 +1,7 @@
 package bsr.rs;
 
-import bsr.Exceptions.BankException;
 import bsr.Exceptions.Error;
-import bsr.model.AccountDAO;
+import bsr.util.AccountDAO;
 import bsr.model.BankAccount;
 import bsr.model.History;
 import bsr.model.Transfer;
@@ -18,50 +17,17 @@ import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Properties;
 
-/**
- * Created by Paweł on 2017-01-12.
- */
+
 
 @Path("/transfer")
 public class TransferResource
 {
-    BankAccount senderAccount;
-    BankAccount receiverAccount;
-    String BankId = "00112272";
+    private static final String BankId = "00112272";
 
-
-    public void writeHistory(Transfer transfer)
-    {
-        BankAccount bankAccount = AccountDAO.searchBankAccount(transfer.getSender());
-        BankAccount bankAccount2 = AccountDAO.searchBankAccount(transfer.getReceiver());
-        if(bankAccount != null && bankAccount2 != null){
-            History history = new History(bankAccount.getId(),transfer.getSender(), transfer.getTitle(),"0",transfer.getAmount(),transfer.getReceiver(),String.valueOf(bankAccount.getBalance()));
-            AccountDAO.insertHistory(history.getId(),history.getAccount(), history.getTitle(), history.getIncome(), history.getOutcome(),history.getSource(), history.getSaldo());
-            if(bankAccount.getId() == bankAccount2.getId()){
-                History history1 = new History(bankAccount2.getId(),transfer.getReceiver(), transfer.getTitle(),transfer.getAmount(),"0",transfer.getSender(),String.valueOf(bankAccount2.getBalance()));
-                AccountDAO.insertHistory(history1.getId(),history1.getAccount(), history1.getTitle(), history1.getIncome(), history1.getOutcome(),history1.getSource(), history1.getSaldo());
-            }
-
-        }
-        else if(bankAccount != null){
-            History history = new History(bankAccount.getId(),transfer.getSender(), transfer.getTitle(),"0",transfer.getAmount(),transfer.getReceiver(),String.valueOf(bankAccount.getBalance()));
-            AccountDAO.insertHistory(history.getId(),history.getAccount(), history.getTitle(), history.getIncome(), history.getOutcome(),history.getSource(), history.getSaldo());
-        }
-        else{
-            BankAccount bankAccount1 = AccountDAO.searchBankAccount(transfer.getReceiver());
-            if(bankAccount1 != null){
-                History history = new History(bankAccount1.getId(),transfer.getReceiver(), transfer.getTitle(),transfer.getAmount(), "0",transfer.getSender(),String.valueOf(bankAccount1.getBalance()));
-                AccountDAO.insertHistory(history.getId(),history.getAccount(), history.getTitle(), history.getIncome(), history.getOutcome(),history.getSource(), history.getSaldo());
-            }
-
-        }
-
-    }
 
     public String loadPropertiesFile(String BankId)
     {
@@ -87,6 +53,119 @@ public class TransferResource
         return result;
     }
 
+    public void registerTransferForSender(BankAccount sender, Transfer transfer){
+        History history = new History(sender.getId(),
+                transfer.getSender(),
+                transfer.getTitle(),
+                0,
+                Double.valueOf(transfer.getAmount()),
+                transfer.getReceiver(),
+                sender.getBalance());
+
+        AccountDAO.insertHistory(history);
+
+    }
+
+    public void registerTransferForReceiver(BankAccount receiver, Transfer transfer){
+        History history = new History(receiver.getId(),
+                transfer.getReceiver(),
+                transfer.getTitle(),
+                Double.valueOf(transfer.getAmount()),
+                0,
+                transfer.getSender(),
+                receiver.getBalance());
+
+        AccountDAO.insertHistory(history);
+
+    }
+
+    public void registerTransfer(BankAccount sender, BankAccount receiver, Transfer transfer){
+        registerTransferForSender(sender, transfer);
+        registerTransferForReceiver(receiver, transfer);
+
+    }
+
+    public Response transferBetweenAccounts(Transfer transfer){
+        BankAccount senderAccount = AccountDAO.searchBankAccount(transfer.getSender());
+        BankAccount receiverAccount = AccountDAO.searchBankAccount(transfer.getReceiver());
+
+        if(senderAccount != null && receiverAccount != null)
+        {
+            double amount = Double.valueOf(transfer.getAmount());
+            double senderAmount = senderAccount.getBalance() - amount;
+            if(senderAmount < 0)
+                return Response.status(400).entity(new Error("lack of money")).build();
+
+            double receiverAmount = receiverAccount.getBalance() + amount;
+
+            AccountDAO.makeTransfer(transfer.getSender(), transfer.getReceiver(), senderAmount, receiverAmount);
+            registerTransfer(senderAccount, receiverAccount, transfer);
+
+            return Response.status(201).entity("transfer completed successfully").build();
+        }
+        else
+        {
+            return Response.status(404).entity(new Error("brak odbiorcy")).build();
+        }
+
+    }
+
+    public Response sendTransferRequest(String receiverBankId, Transfer transfer){
+        Client client = ClientBuilder.newClient();
+        HttpAuthenticationFeature feature = HttpAuthenticationFeature.basic("admin", "admin");
+        client.register(feature);
+
+        String bankUrl = loadPropertiesFile(receiverBankId);
+
+        WebTarget webTarget = client.target(bankUrl);
+        Response receiverBankResponse = webTarget.request("application/json")
+                .post(Entity.entity(transfer, MediaType.APPLICATION_JSON), Response.class);
+
+        return receiverBankResponse;
+    }
+
+    public Response sendTransferToAnotherBank(Transfer transfer){
+
+        BankAccount senderAccount = AccountDAO.searchBankAccount(transfer.getSender());
+
+        double senderAmount = senderAccount.getBalance() - Double.valueOf(transfer.getAmount());
+        if(senderAmount < 0)
+            return Response.status(400).entity(new Error("lack of money")).build();
+
+        String receiverBankId = transfer.getReceiver().substring(2, 10);
+        Response res = sendTransferRequest(receiverBankId, transfer);
+
+        if(res.getStatus() == 201){
+            AccountDAO.updateBankAccount(transfer.getSender(), senderAmount);
+            registerTransferForSender(senderAccount, transfer);
+
+            return Response.status(201).entity("transfer completed successfully").build();
+        }else{
+
+            return Response.status(404).entity(new Error("brak odbiorcy")).build();
+        }
+
+    }
+
+    public Response receiveTransferFromAnotherBank(Transfer transfer){
+        BankAccount receiverAccount = AccountDAO.searchBankAccount(transfer.getReceiver());
+
+        if(receiverAccount != null){
+            double receiverAmount = receiverAccount.getBalance() + Double.valueOf(transfer.getAmount());
+
+            AccountDAO.updateBankAccount(transfer.getReceiver(), receiverAmount);
+            registerTransferForReceiver(receiverAccount, transfer);
+
+            return Response.status(201).entity("transfer completed successfully").build();
+        }
+        else
+        {
+            return Response.status(404).entity(new Error("brak odbiorcy")).build();
+        }
+
+
+    }
+
     @RolesAllowed("ADMIN")
     @POST
     @Consumes(MediaType.APPLICATION_JSON)
@@ -100,8 +179,8 @@ public class TransferResource
 
         String sender = transfer.getSender();
         String receiver = transfer.getReceiver();
-        String bankSender = transfer.getSender().substring(2, 10);
-        String bankReceiver = transfer.getReceiver().substring(2, 10);
+        String senderBankId = transfer.getSender().substring(2, 10);
+        String receiverBankId = transfer.getReceiver().substring(2, 10);
 
         if(!Validator.validateAccountNumber(sender)){
             return Response.status(403).entity(new Error("forbidden")).build();
@@ -110,60 +189,21 @@ public class TransferResource
             return Response.status(403).entity(new Error("forbidden")).build();
         }
 
+
         //przelew do konta w tym samym banku
-         if(bankSender.equals(bankReceiver))
+         if(senderBankId.equals(receiverBankId))
         {
-            senderAccount = AccountDAO.searchBankAccount(sender);
-            receiverAccount = AccountDAO.searchBankAccount(receiver);
+            return transferBetweenAccounts(transfer);
 
-            if(senderAccount != null && receiverAccount != null)
-            {
-                double sum = senderAccount.getBalance() - Double.valueOf(transfer.getAmount());
-                if(sum < 0)
-                    return Response.status(400).entity(new Error("lack of money")).build();
-                double sum1 = receiverAccount.getBalance() + Double.valueOf(transfer.getAmount());
-                AccountDAO.updateBankAccount(sender, String.valueOf(sum));
-                AccountDAO.updateBankAccount(receiver, String.valueOf(sum1));
-                writeHistory(transfer);
-                return Response.status(201).entity("transfer completed successfully").build();
-            }
-            else
-            {
-                return Response.status(404).entity(new Error("brak odbiorcy")).build();
-            }
         }//przelew do konta w innym banku
-        else if(!bankReceiver.equals(BankId))
+        else if(!receiverBankId.equals(BankId))
         {
-            senderAccount = AccountDAO.searchBankAccount(sender);
-            double sum = senderAccount.getBalance() - Double.valueOf(transfer.getAmount());
-            if(sum < 0)
-                return Response.status(400).entity(new Error("lack of money")).build();
-            Client client = ClientBuilder.newClient();
-            HttpAuthenticationFeature feature = HttpAuthenticationFeature.basic("admin", "admin");
-            client.register(feature);
-            String bankUrl = loadPropertiesFile(bankReceiver);
-            WebTarget webTarget = client.target(bankUrl);
-            Response res = webTarget.request("application/json").post(Entity.entity(transfer, MediaType.APPLICATION_JSON), Response.class);
-            if(res.getStatus() == 201){
-                AccountDAO.updateBankAccount(sender, String.valueOf(sum));
-                writeHistory(transfer);
-                return Response.status(201).entity("transfer completed successfully").build();
-            }
+            return sendTransferToAnotherBank(transfer);
 
-        }//odbiór przelewu ok konta w innym banku
-        else if(!bankSender.equals(BankId))
+        }//odbiór przelewu od konta w innym banku
+        else if(!senderBankId.equals(BankId))
         {
-            receiverAccount = AccountDAO.searchBankAccount(receiver);
-            if(receiverAccount != null){
-                double sum = receiverAccount.getBalance() + Double.valueOf(transfer.getAmount());
-                AccountDAO.updateBankAccount(receiver, String.valueOf(sum));
-                writeHistory(transfer);
-                return Response.status(201).entity("transfer completed successfully").build();
-            }
-            else
-            {
-                return Response.status(404).entity(new Error("brak odbiorcy")).build();
-            }
+            return receiveTransferFromAnotherBank(transfer);
 
         }
 

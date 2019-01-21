@@ -1,17 +1,16 @@
 package bsr.util;
 
+import bsr.model.Account;
 import bsr.model.BankAccount;
 import bsr.model.History;
-import bsr.model.Account;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * Created by Paweł on 2017-01-25.
- */
+
+
 public class Mapping
 {
 
@@ -44,7 +43,7 @@ public class Mapping
                 BankAccount bankAccount = new BankAccount();
                 bankAccount.setId(rs.getInt("id"));
                 bankAccount.setNumber(rs.getString("number"));
-                bankAccount.setBalance(Double.valueOf(rs.getString("saldo")));
+                bankAccount.setBalance(rs.getDouble("saldo"));
                 bankAccounts.add(bankAccount);
             }
         } catch (SQLException e) {
@@ -57,6 +56,7 @@ public class Mapping
     public static ArrayList<History> getAccountHistory(ResultSet rs)
     {
         ArrayList<History> historyList = new ArrayList<>();
+        DateProvider provider = new DateProvider("yyyy-MM-dd hh:mm:ss");
         try {
             while(rs.next())
             {
@@ -64,10 +64,11 @@ public class Mapping
                 history.setId(rs.getInt("id"));
                 history.setAccount(rs.getString("account"));
                 history.setTitle(rs.getString("title"));
-                history.setIncome(rs.getString("income"));
-                history.setOutcome(rs.getString("outcome"));
+                history.setIncome(rs.getDouble("income"));
+                history.setOutcome(rs.getDouble("outcome"));
                 history.setSource(rs.getString("source"));
-                history.setSaldo(rs.getString("saldo"));
+                history.setSaldo(rs.getDouble("saldo"));
+                history.setDate(provider.fromString(rs.getString("date")));
                 historyList.add(history);
             }
         } catch (SQLException e) {

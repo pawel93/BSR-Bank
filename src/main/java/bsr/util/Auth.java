@@ -11,13 +11,10 @@ import javax.ws.rs.container.ResourceInfo;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
-import java.io.IOException;
 import java.lang.reflect.Method;
 import java.util.*;
 
-/**
- * Created by Paweł on 2017-01-29.
- */
+
 public class Auth implements ContainerRequestFilter
 {
 
@@ -56,7 +53,7 @@ public class Auth implements ContainerRequestFilter
 
             final String encodedUserPassword = authorization.get(0).replaceFirst(AUTHENTICATION_SCHEME + " ", "");
 
-            String usernameAndPassword = new String(Base64.decode(encodedUserPassword.getBytes()));;
+            String usernameAndPassword = new String(Base64.decode(encodedUserPassword.getBytes()));
 
             final StringTokenizer tokenizer = new StringTokenizer(usernameAndPassword, ":");
             final String username = tokenizer.nextToken();

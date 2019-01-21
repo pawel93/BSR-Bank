@@ -3,9 +3,7 @@ package bsr.model;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * Created by Paweł on 2017-01-12.
- */
+
 public class Account
 {
 
@@ -72,7 +70,6 @@ public class Account
     }
 
 
-
     public List<BankAccount> getBills() {
         return bills;
     }
@@ -80,6 +77,7 @@ public class Account
     public void setBills(List<BankAccount> bills) {
         this.bills = bills;
     }
+
 
     public void addBill(BankAccount bill) {
         bills.add(bill);

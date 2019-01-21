@@ -1,8 +1,6 @@
 package bsr.model;
 
-/**
- * Created by Paweł on 2017-01-12.
- */
+
 public class Payment
 {
 

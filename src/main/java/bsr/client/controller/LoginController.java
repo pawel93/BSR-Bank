@@ -1,57 +1,52 @@
 package bsr.client.controller;
 
 import bsr.client.Client;
-import bsr.client.ParentScreen;
+import bsr.client.RootScreen;
 import bsr.model.Account;
-import bsr.ws.IBank;
-import javafx.concurrent.Task;
 import javafx.event.ActionEvent;
+import javafx.fxml.FXML;
+import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
+import javafx.scene.Node;
+import javafx.scene.Parent;
+import javafx.scene.Scene;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
+import javafx.stage.Stage;
 
-import javax.xml.namespace.QName;
-import javax.xml.ws.Service;
-import java.net.MalformedURLException;
+import java.io.IOException;
 import java.net.URL;
 import java.util.ResourceBundle;
 
-/**
- * Created by Paweł on 2017-01-24.
- */
+
 public class LoginController implements Initializable, IController
 {
 
-    private ParentScreen parentScreen;
-    Controller controller;
-    public TextField login;
-    public TextField password;
-    public Label label;
+    private RootScreen rootScreen;
+
+    @FXML private TextField login;
+    @FXML private TextField password;
+    @FXML private Label label;
 
     private Client client;
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
+    }
+
+    public LoginController(){
         client = new Client();
     }
 
-    public void initData(){
-
-    }
-
     @Override
-    public void setScreenParent(ParentScreen parent) {
-        this.parentScreen = parent;
+    public void setScreenParent(RootScreen parent) {
+        this.rootScreen = parent;
     }
 
-    public void setMainController(Controller controller)
-    {
-        this.controller = controller;
-    }
 
     public void createAccountButton(ActionEvent actionEvent)
     {
-        parentScreen.setScreen(2);
+        rootScreen.setScreen("register");
     }
 
     public void login(ActionEvent actionEvent)
@@ -62,10 +57,28 @@ public class LoginController implements Initializable, IController
         }
         else{
             label.setText("");
-            controller.setAccount(result);
-            parentScreen.setScreen(3);
+            //Stage loginStage = (Stage) ((Node)actionEvent.getSource()).getScene().getWindow();
+            HomeController homeController = (HomeController) rootScreen.getController("home");
+            homeController.initData(result);
+            rootScreen.setScreen("home");
+
         }
 
+    }
+
+
+    public Stage loadNextStage(String resource){
+        Stage nextStage = new Stage();
+        FXMLLoader fxmlLoader = new FXMLLoader(getClass().getResource(resource));
+        try {
+            Parent parent = fxmlLoader.load();
+            nextStage.setScene(new Scene(parent));
+            nextStage.setTitle("Client");
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return nextStage;
     }
 
 

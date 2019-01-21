@@ -1,49 +1,44 @@
 package bsr.client.controller;
 
 import bsr.client.Client;
-import bsr.client.ParentScreen;
+import bsr.client.RootScreen;
 import bsr.model.Account;
 import javafx.concurrent.Task;
 import javafx.event.ActionEvent;
+import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.control.TextField;
 
 import java.net.URL;
 import java.util.ResourceBundle;
 
-/**
- * Created by Paweł on 2017-01-26.
- */
+
+
 public class RegisterController implements Initializable, IController
 {
 
-    private ParentScreen parentScreen;
-    Controller controller;
-    public TextField nameText;
-    public TextField surnameText;
-    public TextField loginText;
-    public TextField passwordText;
+    private RootScreen rootScreen;
 
-    Client client;
+    @FXML private TextField nameText;
+    @FXML private TextField surnameText;
+    @FXML private TextField loginText;
+    @FXML private TextField passwordText;
+
+    private Client client;
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
         client = new Client();
     }
 
-    public void initData(){
+    public RegisterController(){
 
     }
 
     @Override
-    public void setScreenParent(ParentScreen parent)
+    public void setScreenParent(RootScreen parent)
     {
-        this.parentScreen = parent;
-    }
-
-    public void setMainController(Controller controller)
-    {
-        this.controller = controller;
+        this.rootScreen = parent;
     }
 
     public void clearForm()
@@ -56,12 +51,12 @@ public class RegisterController implements Initializable, IController
 
     public void returnButton(ActionEvent actionEvent)
     {
-        parentScreen.setScreen(1);
+        rootScreen.setScreen("login");
     }
 
     public void createAccount(ActionEvent actionEvent)
     {
-        Account account = new Account(nameText.getText(), surnameText.getText(), loginText.getText(), passwordText.getText());
+        final Account account = new Account(nameText.getText(), surnameText.getText(), loginText.getText(), passwordText.getText());
         Task<Void> task = new Task<Void>() {
             @Override
             protected Void call() throws Exception {

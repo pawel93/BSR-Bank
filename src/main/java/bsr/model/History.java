@@ -1,25 +1,25 @@
 package bsr.model;
 
 import java.io.Serializable;
+import java.util.Date;
 
-/**
- * Created by Paweł on 2017-01-26.
- */
+
 public class History implements Serializable
 {
     private int id;
     private String account;
     private String title;
-    private String income;
-    private String outcome;
+    private double income;
+    private double outcome;
     private String source;
-    private String saldo;
+    private double saldo;
+    private Date date;
 
     public History(){
 
     }
 
-    public History(int id,String account, String title, String income, String outcome, String source, String saldo) {
+    public History(int id,String account, String title, double income, double outcome, String source, double saldo) {
         this.id = id;
         this.account = account;
         this.title = title;
@@ -37,11 +37,11 @@ public class History implements Serializable
         this.account = account;
     }
 
-    public String getIncome() {
+    public double getIncome() {
         return income;
     }
 
-    public void setIncome(String income) {
+    public void setIncome(double income) {
         this.income = income;
     }
 
@@ -61,11 +61,11 @@ public class History implements Serializable
         this.title = title;
     }
 
-    public String getOutcome() {
+    public double getOutcome() {
         return outcome;
     }
 
-    public void setOutcome(String outcome) {
+    public void setOutcome(double outcome) {
         this.outcome = outcome;
     }
 
@@ -77,11 +77,20 @@ public class History implements Serializable
         this.source = source;
     }
 
-    public String getSaldo() {
+    public double getSaldo() {
         return saldo;
     }
 
-    public void setSaldo(String saldo) {
+    public void setSaldo(double saldo) {
         this.saldo = saldo;
     }
+
+    public Date getDate() {
+        return date;
+    }
+
+    public void setDate(Date date) {
+        this.date = date;
+    }
+
 }

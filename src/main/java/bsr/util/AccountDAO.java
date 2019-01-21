@@ -1,33 +1,30 @@
-package bsr.model;
+package bsr.util;
 
+import bsr.model.Account;
+import bsr.model.BankAccount;
+import bsr.model.History;
 import bsr.util.DBUtil;
 import bsr.util.Mapping;
 
-import java.sql.ResultSet;
-import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * Created by Paweł on 2017-01-25.
- */
+
 public class AccountDAO
 {
 
     public static Account searchAccount(String login, String password)
     {
-        Account account = null;
         String selectStmt = "SELECT * FROM accounts WHERE login='" + login + "'" + " AND password='" + password + "'";
-        account = Mapping.getAccountFromResultSet(DBUtil.dbExecuteQuery(selectStmt));
+        Account account = Mapping.getAccountFromResultSet(DBUtil.dbExecuteQuery(selectStmt));
         return account;
     }
 
 
     public static Account searchAccount(int id)
     {
-        Account account = null;
         String selectStmt = "SELECT * FROM accounts WHERE id='" + id + "'";
-        account = Mapping.getAccountFromResultSet(DBUtil.dbExecuteQuery(selectStmt));
+        Account account = Mapping.getAccountFromResultSet(DBUtil.dbExecuteQuery(selectStmt));
         return account;
     }
 
@@ -39,7 +36,9 @@ public class AccountDAO
         DBUtil.dbExecuteUpdate(updateStmt);
     }
 
-    public static void insertBankAccount(int id, String number, String saldo)
+
+
+    public static void insertBankAccount(int id, String number, double saldo)
     {
         String updateStmt = "INSERT INTO bills(id, number, saldo) VALUES('" + id + "','" + number + "','" + saldo + "')";
         DBUtil.dbExecuteUpdate(updateStmt);
@@ -65,16 +64,36 @@ public class AccountDAO
 
     }
 
-    public static void updateBankAccount(String number, String amount)
+    public static void updateBankAccount(String number, double amount)
     {
         String selectStmt = "UPDATE bills SET saldo='" + amount + "'WHERE number='" + number + "'";
         DBUtil.dbExecuteUpdate(selectStmt);
     }
 
-    public static void insertHistory(int id,String account, String title, String income, String outcome, String source, String saldo)
+    public static void makeTransfer(String sender, String receiver, double senderAmount, double receiverAmount){
+        String updateSenderStmt = "UPDATE bills SET saldo='" + senderAmount + "'WHERE number='" + sender + "'";
+        String updateReceiverStmt = "UPDATE bills SET saldo='" + receiverAmount + "'WHERE number='" + receiver + "'";
+        DBUtil.dbExecuteTransaction(updateSenderStmt, updateReceiverStmt);
+
+    }
+
+    public static void deleteBankAccount(String accountNumber){
+        String deleteStmt = "DELETE FROM bills WHERE number = '" + accountNumber + "'";
+        DBUtil.dbExecuteUpdate(deleteStmt);
+    }
+
+
+    public static void insertHistory(History history)
     {
-        String updateStmt = "INSERT INTO history VALUES('" + id + "','" + account + "','" + title + "','" + income + "','" + outcome + "','" +
-                source + "','" + saldo + "')";
+        String updateStmt = "INSERT INTO history VALUES('" + history.getId() + "','"
+                + history.getAccount() + "','"
+                + history.getTitle() + "','"
+                + history.getIncome() + "','"
+                + history.getOutcome() + "','"
+                + history.getSource() + "','"
+                + history.getSaldo() + "',"
+                + " datetime('now') )";
+
         DBUtil.dbExecuteUpdate(updateStmt);
 
     }
