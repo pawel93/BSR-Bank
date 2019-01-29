@@ -1,6 +1,7 @@
 package bsr.model;
 
 
+
 public class Payment
 {
 

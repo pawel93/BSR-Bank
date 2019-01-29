@@ -6,7 +6,6 @@ import bsr.model.Transfer;
 import java.math.BigInteger;
 
 
-
 public class Validator
 {
 

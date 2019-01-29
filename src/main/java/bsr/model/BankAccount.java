@@ -1,11 +1,20 @@
 package bsr.model;
 
+import javax.persistence.Entity;
+import javax.persistence.Id;
+import javax.persistence.Table;
 
+
+
+@Entity
+@Table(name = "bills")
 public class BankAccount
 {
 
-    private int id;
+    @Id
     private String number;
+
+    private int id;
     private double saldo;
 
     public BankAccount() {

@@ -54,6 +54,13 @@
             <version>2.22.2</version>
         </dependency>
 
+        <!-- https://mvnrepository.com/artifact/org.hibernate/hibernate-core -->
+        <dependency>
+            <groupId>org.hibernate</groupId>
+            <artifactId>hibernate-core</artifactId>
+            <version>5.4.1.Final</version>
+        </dependency>
+
         <!-- jdbc driver -->
         <dependency>
             <groupId>org.xerial</groupId>

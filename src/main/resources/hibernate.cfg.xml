@@ -1,0 +1,20 @@
+<?xml version='1.0' encoding='utf-8'?>
+<!DOCTYPE hibernate-configuration PUBLIC
+        "-//Hibernate/Hibernate Configuration DTD//EN"
+        "http://www.hibernate.org/dtd/hibernate-configuration-3.0.dtd">
+<hibernate-configuration>
+    <session-factory>
+        <property name="connection.url">jdbc:sqlite:database/accounts.db</property>
+        <property name="connection.driver_class">org.sqlite.JDBC</property>
+        <!-- <property name="connection.username"/> -->
+        <!-- <property name="connection.password"/> -->
+        <property name="dialect">bsr.util.SQLiteDialect</property>
+
+        <!-- DB schema will be updated if needed -->
+        <!-- <property name="hbm2ddl.auto">create</property> -->
+        <mapping class="bsr.model.Account"/>
+        <mapping class="bsr.model.BankAccount"/>
+        <mapping class="bsr.model.History"/>
+
+    </session-factory>
+</hibernate-configuration>

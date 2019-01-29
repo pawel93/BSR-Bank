@@ -1,26 +1,36 @@
 package bsr.model;
 
+import javax.persistence.*;
 import java.io.Serializable;
 import java.util.Date;
 
 
+
+@Entity
+@Table(name = "history")
 public class History implements Serializable
 {
+    @Id
+    @GeneratedValue(generator = "increment")
     private int id;
+
+    private int accountId;
     private String account;
     private String title;
     private double income;
     private double outcome;
     private String source;
     private double saldo;
+
+    @Temporal(TemporalType.TIMESTAMP)
     private Date date;
 
     public History(){
 
     }
 
-    public History(int id,String account, String title, double income, double outcome, String source, double saldo) {
-        this.id = id;
+    public History(int accountId, String account, String title, double income, double outcome, String source, double saldo) {
+        this.accountId = accountId;
         this.account = account;
         this.title = title;
         this.income = income;
@@ -45,12 +55,12 @@ public class History implements Serializable
         this.income = income;
     }
 
-    public int getId() {
-        return id;
+    public int getAccountId() {
+        return accountId;
     }
 
-    public void setId(int id) {
-        this.id = id;
+    public void setAccountId(int accountId) {
+        this.accountId = accountId;
     }
 
     public String getTitle() {

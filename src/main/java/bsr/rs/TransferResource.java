@@ -1,11 +1,13 @@
 package bsr.rs;
 
 import bsr.Exceptions.Error;
-import bsr.util.AccountDAO;
+import bsr.util.dao.BankAccountDAO;
+import bsr.util.dao.DAO;
 import bsr.model.BankAccount;
 import bsr.model.History;
 import bsr.model.Transfer;
 import bsr.util.Validator;
+import bsr.util.dao.HistoryDAO;
 import org.glassfish.jersey.client.authentication.HttpAuthenticationFeature;
 
 import javax.annotation.security.RolesAllowed;
@@ -28,6 +30,9 @@ public class TransferResource
 {
     private static final String BankId = "00112272";
 
+    public TransferResource(){
+
+    }
 
     public String loadPropertiesFile(String BankId)
     {
@@ -35,7 +40,7 @@ public class TransferResource
         InputStream input = null;
         String result = "";
         try {
-            input = new FileInputStream("bank.properties");
+            input = new FileInputStream("data/bank.properties");
             prop.load(input);
             result = prop.getProperty(BankId);
         } catch (IOException e) {
@@ -62,7 +67,7 @@ public class TransferResource
                 transfer.getReceiver(),
                 sender.getBalance());
 
-        AccountDAO.insertHistory(history);
+        HistoryDAO.insertHistory(history);
 
     }
 
@@ -75,7 +80,7 @@ public class TransferResource
                 transfer.getSender(),
                 receiver.getBalance());
 
-        AccountDAO.insertHistory(history);
+        HistoryDAO.insertHistory(history);
 
     }
 
@@ -86,8 +91,8 @@ public class TransferResource
     }
 
     public Response transferBetweenAccounts(Transfer transfer){
-        BankAccount senderAccount = AccountDAO.searchBankAccount(transfer.getSender());
-        BankAccount receiverAccount = AccountDAO.searchBankAccount(transfer.getReceiver());
+        BankAccount senderAccount = BankAccountDAO.searchBankAccount(transfer.getSender());
+        BankAccount receiverAccount = BankAccountDAO.searchBankAccount(transfer.getReceiver());
 
         if(senderAccount != null && receiverAccount != null)
         {
@@ -98,7 +103,7 @@ public class TransferResource
 
             double receiverAmount = receiverAccount.getBalance() + amount;
 
-            AccountDAO.makeTransfer(transfer.getSender(), transfer.getReceiver(), senderAmount, receiverAmount);
+            BankAccountDAO.makeTransfer(transfer.getSender(), transfer.getReceiver(), senderAmount, receiverAmount);
             registerTransfer(senderAccount, receiverAccount, transfer);
 
             return Response.status(201).entity("transfer completed successfully").build();
@@ -126,7 +131,7 @@ public class TransferResource
 
     public Response sendTransferToAnotherBank(Transfer transfer){
 
-        BankAccount senderAccount = AccountDAO.searchBankAccount(transfer.getSender());
+        BankAccount senderAccount = BankAccountDAO.searchBankAccount(transfer.getSender());
 
         double senderAmount = senderAccount.getBalance() - Double.valueOf(transfer.getAmount());
         if(senderAmount < 0)
@@ -136,7 +141,7 @@ public class TransferResource
         Response res = sendTransferRequest(receiverBankId, transfer);
 
         if(res.getStatus() == 201){
-            AccountDAO.updateBankAccount(transfer.getSender(), senderAmount);
+            BankAccountDAO.updateBankAccount(transfer.getSender(), senderAmount);
             registerTransferForSender(senderAccount, transfer);
 
             return Response.status(201).entity("transfer completed successfully").build();
@@ -148,12 +153,12 @@ public class TransferResource
     }
 
     public Response receiveTransferFromAnotherBank(Transfer transfer){
-        BankAccount receiverAccount = AccountDAO.searchBankAccount(transfer.getReceiver());
+        BankAccount receiverAccount = BankAccountDAO.searchBankAccount(transfer.getReceiver());
 
         if(receiverAccount != null){
             double receiverAmount = receiverAccount.getBalance() + Double.valueOf(transfer.getAmount());
 
-            AccountDAO.updateBankAccount(transfer.getReceiver(), receiverAmount);
+            BankAccountDAO.updateBankAccount(transfer.getReceiver(), receiverAmount);
             registerTransferForReceiver(receiverAccount, transfer);
 
             return Response.status(201).entity("transfer completed successfully").build();

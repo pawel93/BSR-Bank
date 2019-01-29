@@ -1,30 +1,31 @@
-package bsr.util;
+package bsr.util.dao;
 
 import bsr.model.Account;
 import bsr.model.BankAccount;
 import bsr.model.History;
-import bsr.util.DBUtil;
-import bsr.util.Mapping;
 
 import java.util.ArrayList;
 import java.util.List;
 
 
-public class AccountDAO
+
+public class DAO
 {
 
     public static Account searchAccount(String login, String password)
     {
+        Account account = null;
         String selectStmt = "SELECT * FROM accounts WHERE login='" + login + "'" + " AND password='" + password + "'";
-        Account account = Mapping.getAccountFromResultSet(DBUtil.dbExecuteQuery(selectStmt));
+        account = Mapping.getAccountFromResultSet(DBUtil.dbExecuteQuery(selectStmt));
         return account;
     }
 
 
     public static Account searchAccount(int id)
     {
+        Account account = null;
         String selectStmt = "SELECT * FROM accounts WHERE id='" + id + "'";
-        Account account = Mapping.getAccountFromResultSet(DBUtil.dbExecuteQuery(selectStmt));
+        account = Mapping.getAccountFromResultSet(DBUtil.dbExecuteQuery(selectStmt));
         return account;
     }
 
@@ -85,7 +86,7 @@ public class AccountDAO
 
     public static void insertHistory(History history)
     {
-        String updateStmt = "INSERT INTO history VALUES('" + history.getId() + "','"
+        String updateStmt = "INSERT INTO history VALUES('" + history.getAccountId() + "','"
                 + history.getAccount() + "','"
                 + history.getTitle() + "','"
                 + history.getIncome() + "','"

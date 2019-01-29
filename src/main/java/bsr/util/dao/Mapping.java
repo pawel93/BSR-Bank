@@ -1,8 +1,9 @@
-package bsr.util;
+package bsr.util.dao;
 
 import bsr.model.Account;
 import bsr.model.BankAccount;
 import bsr.model.History;
+import bsr.util.DateProvider;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -61,7 +62,7 @@ public class Mapping
             while(rs.next())
             {
                 History history = new History();
-                history.setId(rs.getInt("id"));
+                history.setAccountId(rs.getInt("id"));
                 history.setAccount(rs.getString("account"));
                 history.setTitle(rs.getString("title"));
                 history.setIncome(rs.getDouble("income"));

@@ -30,39 +30,44 @@
     <center>
         <GridPane alignment="CENTER" vgap="5" hgap="5">
             <children>
-                <Label text="name:">
+                <Label textFill="RED" fx:id="alertlabel">
                     <GridPane.rowIndex>0</GridPane.rowIndex>
+                    <GridPane.columnIndex>0</GridPane.columnIndex>
+                    <GridPane.columnSpan>2</GridPane.columnSpan>
+                </Label>
+                <Label text="name:">
+                    <GridPane.rowIndex>1</GridPane.rowIndex>
                     <GridPane.columnIndex>0</GridPane.columnIndex>
                 </Label>
                 <TextField fx:id="nameText">
-                    <GridPane.rowIndex>0</GridPane.rowIndex>
+                    <GridPane.rowIndex>1</GridPane.rowIndex>
                     <GridPane.columnIndex>1</GridPane.columnIndex>
                 </TextField>
 
                 <Label text="surname:">
-                    <GridPane.rowIndex>1</GridPane.rowIndex>
+                    <GridPane.rowIndex>2</GridPane.rowIndex>
                     <GridPane.columnIndex>0</GridPane.columnIndex>
                 </Label>
                 <TextField fx:id="surnameText">
-                    <GridPane.rowIndex>1</GridPane.rowIndex>
+                    <GridPane.rowIndex>2</GridPane.rowIndex>
                     <GridPane.columnIndex>1</GridPane.columnIndex>
                 </TextField>
 
                 <Label text="login:">
-                    <GridPane.rowIndex>2</GridPane.rowIndex>
+                    <GridPane.rowIndex>3</GridPane.rowIndex>
                     <GridPane.columnIndex>0</GridPane.columnIndex>
                 </Label>
                 <TextField fx:id="loginText">
-                    <GridPane.rowIndex>2</GridPane.rowIndex>
+                    <GridPane.rowIndex>3</GridPane.rowIndex>
                     <GridPane.columnIndex>1</GridPane.columnIndex>
                 </TextField>
 
                 <Label text="password:">
-                    <GridPane.rowIndex>3</GridPane.rowIndex>
+                    <GridPane.rowIndex>4</GridPane.rowIndex>
                     <GridPane.columnIndex>0</GridPane.columnIndex>
                 </Label>
                 <TextField fx:id="passwordText">
-                    <GridPane.rowIndex>3</GridPane.rowIndex>
+                    <GridPane.rowIndex>4</GridPane.rowIndex>
                     <GridPane.columnIndex>1</GridPane.columnIndex>
                 </TextField>
 
@@ -71,7 +76,7 @@
                         <Insets top="10"/>
                     </padding>
                     <GridPane.columnSpan>2</GridPane.columnSpan>
-                    <GridPane.rowIndex>4</GridPane.rowIndex>
+                    <GridPane.rowIndex>5</GridPane.rowIndex>
                     <GridPane.columnIndex>0</GridPane.columnIndex>
                     <Button text="create account" onAction="#createAccount" maxWidth="Infinity"/>
                     <Button text="return" onAction="#returnButton" maxWidth="Infinity"/>

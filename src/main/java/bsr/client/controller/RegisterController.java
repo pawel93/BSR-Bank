@@ -1,12 +1,15 @@
 package bsr.client.controller;
 
+import bsr.Exceptions.BankException;
 import bsr.client.Client;
 import bsr.client.RootScreen;
 import bsr.model.Account;
+import javafx.application.Platform;
 import javafx.concurrent.Task;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
+import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
 
 import java.net.URL;
@@ -23,16 +26,17 @@ public class RegisterController implements Initializable, IController
     @FXML private TextField surnameText;
     @FXML private TextField loginText;
     @FXML private TextField passwordText;
+    @FXML private Label alertlabel;
 
     private Client client;
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
-        client = new Client();
+
     }
 
     public RegisterController(){
-
+        client = Client.getInstance();
     }
 
     @Override
@@ -49,18 +53,31 @@ public class RegisterController implements Initializable, IController
         passwordText.clear();
     }
 
-    public void returnButton(ActionEvent actionEvent)
+    @FXML
+    private void returnButton(ActionEvent actionEvent)
     {
+        alertlabel.setText("");
         rootScreen.setScreen("login");
     }
 
-    public void createAccount(ActionEvent actionEvent)
+    @FXML
+    private void createAccount(ActionEvent actionEvent)
     {
         final Account account = new Account(nameText.getText(), surnameText.getText(), loginText.getText(), passwordText.getText());
         Task<Void> task = new Task<Void>() {
             @Override
             protected Void call() throws Exception {
-                client.createAccount(account);
+                try{
+                    client.createAccount(account);
+                }catch(BankException e){
+                    Platform.runLater(new Runnable(){
+                        @Override
+                        public void run() {
+                            alertlabel.setText("wrong login");
+                        }
+                    });
+
+                }
                 return null;
             }
         };

@@ -19,6 +19,7 @@ import java.net.URL;
 import java.util.ResourceBundle;
 
 
+
 public class LoginController implements Initializable, IController
 {
 
@@ -35,7 +36,7 @@ public class LoginController implements Initializable, IController
     }
 
     public LoginController(){
-        client = new Client();
+        client = Client.getInstance();
     }
 
     @Override
@@ -43,13 +44,14 @@ public class LoginController implements Initializable, IController
         this.rootScreen = parent;
     }
 
-
-    public void createAccountButton(ActionEvent actionEvent)
+    @FXML
+    private void createAccountButton(ActionEvent actionEvent)
     {
         rootScreen.setScreen("register");
     }
 
-    public void login(ActionEvent actionEvent)
+    @FXML
+    private void login(ActionEvent actionEvent)
     {
         Account result = client.confirmCredentials(login.getText(), password.getText());
         if(result == null){

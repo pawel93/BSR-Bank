@@ -17,12 +17,15 @@ import java.net.URL;
 import java.util.*;
 
 
+
 public class Client
 {
 
     private IBank BankService;
     private static final  String WSUrl = "http://localhost:8888/ws/bank?wsdl";
-    public Client()
+    private static Client singleInstance = null;
+
+    private Client()
     {
         URL url = null;
         try {
@@ -36,7 +39,16 @@ public class Client
 
     }
 
-    public void createAccount(Account account)
+    public static Client getInstance(){
+
+        if(singleInstance == null){
+            singleInstance = new Client();
+        }
+        return singleInstance;
+
+    }
+
+    public void createAccount(Account account)throws BankException
     {
         BankService.createAccount(account);
     }

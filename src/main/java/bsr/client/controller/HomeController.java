@@ -6,6 +6,8 @@ import bsr.client.AlertWindow;
 import bsr.client.Client;
 import bsr.client.RootScreen;
 import bsr.model.*;
+import bsr.util.DateProvider;
+import javafx.collections.FXCollections;
 import javafx.concurrent.Task;
 import javafx.concurrent.WorkerStateEvent;
 import javafx.event.ActionEvent;
@@ -22,11 +24,8 @@ import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.net.URL;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.ResourceBundle;
-
+import java.util.*;
+import java.util.stream.Collectors;
 
 
 
@@ -60,13 +59,14 @@ public class HomeController implements Initializable, IController
     }
 
     public HomeController(){
-        client = new Client();
+        client = Client.getInstance();
     }
 
 
     public void initData(Account currentAccount){
         this.currentAccountId = currentAccount.getId();
 
+        textArea.clear();
         populateUserData(currentAccount);
         populateComobBoxData(currentAccount);
     }
@@ -76,13 +76,12 @@ public class HomeController implements Initializable, IController
     }
 
     public void populateComobBoxData(Account currentAccount){
-        accountIn.getItems().clear();
+        //accountIn.getItems().removeAll(accountIn.getItems());
 
         List<BankAccount> bankAccounts = currentAccount.getBills();
-        for(BankAccount bankAccount : bankAccounts)
-        {
-            accountIn.getItems().add(bankAccount.getNumber());
-        }
+        List<String> accountsNumbers = bankAccounts.stream().map(BankAccount::getNumber).collect(Collectors.toList());
+        accountIn.setItems(FXCollections.observableArrayList(accountsNumbers));
+
         accountIn.getSelectionModel().selectFirst();
         numberLabel.setText("account number: " + accountIn.getSelectionModel().getSelectedItem());
 
@@ -96,21 +95,27 @@ public class HomeController implements Initializable, IController
         this.rootScreen = parent;
     }
 
-    public void comboAction(ActionEvent actionEvent)
+    @FXML
+    private void comboAction(ActionEvent actionEvent)
     {
         numberLabel.setText("account number: " + accountIn.getValue());
         senderText.setText(accountIn.getValue());
 
-        BankAccount bankAccount = client.getBankAccount(accountIn.getValue());
-        saldoLabel.setText("saldo: " + String.valueOf(bankAccount.getBalance()));
+        if(!accountIn.getSelectionModel().isEmpty()){
+            BankAccount bankAccount = client.getBankAccount(accountIn.getValue());
+            saldoLabel.setText("saldo: " + String.valueOf(bankAccount.getBalance()));
+        }
+
     }
 
-    public void logout(ActionEvent actionEvent)
+    @FXML
+    private void logout(ActionEvent actionEvent)
     {
         rootScreen.setScreen("login");
     }
 
-    public void goToHistory(ActionEvent actionEvent)
+    @FXML
+    private void goToHistory(ActionEvent actionEvent)
     {
         ArrayList<History> lista = client.getAccountHistory(currentAccountId);
         HistoryController historyController = (HistoryController) rootScreen.getController("history");
@@ -118,13 +123,15 @@ public class HomeController implements Initializable, IController
         rootScreen.setScreen("history");
     }
 
-    public void createAccount(ActionEvent actionEvent)
+    @FXML
+    private void createAccount(ActionEvent actionEvent)
     {
         BankAccount created = client.createBankAccount(currentAccountId);
         accountIn.getItems().add(created.getNumber());
     }
 
-    public void removeAccount(ActionEvent actionEvent) {
+    @FXML
+    private void removeAccount(ActionEvent actionEvent) {
 
         if(accountIn.getItems().size() > 1){
             String selectedBankAccount = accountIn.getValue();
@@ -134,7 +141,8 @@ public class HomeController implements Initializable, IController
         }
     }
 
-    public void payin(ActionEvent actionEvent)
+    @FXML
+    private void payin(ActionEvent actionEvent)
     {
         Payment payment = new Payment(text1.getText(), accountIn.getValue());
         try {
@@ -142,14 +150,15 @@ public class HomeController implements Initializable, IController
             saldoLabel.setText("saldo: " + String.valueOf(saldo));
 
         } catch (BankException e) {
-            textArea.setText(e.getMessage());
+            updateOperationsLog(e.getMessage());
             AlertWindow.show(e.getMessage(), "BankException");
         }
         text1.clear();
 
     }
 
-    public void payout(ActionEvent actionEvent)
+    @FXML
+    private void payout(ActionEvent actionEvent)
     {
         Payment payment = new Payment(text2.getText(), accountIn.getValue());
         try {
@@ -157,13 +166,20 @@ public class HomeController implements Initializable, IController
             saldoLabel.setText("saldo: " + String.valueOf(saldo));
 
         } catch (BankException e) {
-            textArea.setText(e.getMessage());
+            updateOperationsLog(e.getMessage());
         }
         text2.clear();
     }
 
+    public void updateOperationsLog(String text){
 
-    public void sendTransfer(ActionEvent actionEvent)
+        DateProvider provider = new DateProvider("yyyy-MM-dd hh:mm:ss");
+        String nextLine = text + "\t" + provider.toString(new Date()) + "\n";
+        textArea.setText(nextLine + textArea.getText());
+    }
+
+    @FXML
+    private void sendTransfer(ActionEvent actionEvent)
     {
 
         final Transfer transfer = new Transfer(titleText.getText(), amountText.getText(), senderText.getText(), receiverText.getText());
@@ -200,27 +216,28 @@ public class HomeController implements Initializable, IController
                 progressIndicator.setVisible(false);
                 Response res = backgroundTask.getValue();
 
+
                 if(res.getStatus() == 404){
                     Error error = res.readEntity(Error.class);
-                    textArea.setText(error.getError());
+                    updateOperationsLog(error.getError());
                 }
                 else if(res.getStatus() == 401){
-                    textArea.setText("Unauthorized");
+                    updateOperationsLog("Unauthorized");
                 }
                 else if(res.getStatus() == 400){
                     Error error = res.readEntity(Error.class);
-                    textArea.setText(error.getError());
+                    updateOperationsLog(error.getError());
                 }
                 else if(res.getStatus() == 403){
                     Error error = res.readEntity(Error.class);
-                    textArea.setText(error.getError());
+                    updateOperationsLog(error.getError());
                 }
                 else if(res.getStatus() == 500){
                     Error error = res.readEntity(Error.class);
-                    textArea.setText(error.getError());
+                    updateOperationsLog(error.getError());
                 }
                 else if(res.getStatus() == 201){
-                    textArea.setText(res.readEntity(String.class));
+                    updateOperationsLog(res.readEntity(String.class));
 
                     String selected = accountIn.getSelectionModel().getSelectedItem();
                     BankAccount bankAccount = client.getBankAccount(selected);

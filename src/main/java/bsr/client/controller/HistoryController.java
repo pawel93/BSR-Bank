@@ -59,7 +59,8 @@ public class HistoryController implements Initializable, IController
 
     }
 
-    public void backToHome(ActionEvent actionEvent)
+    @FXML
+    private void backToHome(ActionEvent actionEvent)
     {
         rootScreen.setScreen("home");
     }

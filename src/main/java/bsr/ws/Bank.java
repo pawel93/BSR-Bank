@@ -3,8 +3,10 @@ package bsr.ws;
 import bsr.Exceptions.AccountNotFound;
 import bsr.Exceptions.BankException;
 import bsr.model.*;
-import bsr.util.AccountDAO;
-import bsr.util.Validator;
+import bsr.util.*;
+import bsr.util.dao.AccountDAO;
+import bsr.util.dao.BankAccountDAO;
+import bsr.util.dao.HistoryDAO;
 
 import javax.annotation.Resource;
 import javax.jws.WebService;
@@ -14,7 +16,6 @@ import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-
 
 
 
@@ -47,28 +48,27 @@ public class Bank implements IBank
     //utworzenie nowego rachunku bankowego
     public BankAccount createBankAccount(int id)
     {
-        Account account = getAccount(id);
-        List<BankAccount> lista = account.getBills();
+        List<BankAccount> lista = BankAccountDAO.searchBankAccount(id);
 
         String num = lista.get(lista.size()-1).getNumber();
         long num1 = Long.valueOf(num.substring(10, 26)) + 1;
         String accountNumber = String.format("%016d", num1);
         accountNumber = generateBankAccountNumber(accountNumber);
 
-        AccountDAO.insertBankAccount(account.getId(), accountNumber, 0);
+        BankAccountDAO.insertBankAccount(id, new BankAccount(accountNumber, 0));
 
-        BankAccount created = AccountDAO.searchBankAccount(accountNumber);
+        BankAccount created = BankAccountDAO.searchBankAccount(accountNumber);
         return created;
 
     }
 
     public void deleteBankAccount(String accountNumber){
-        AccountDAO.deleteBankAccount(accountNumber);
+        BankAccountDAO.deleteBankAccount(accountNumber);
     }
 
     public BankAccount getBankAccount(String accountNumber){
 
-        return AccountDAO.searchBankAccount(accountNumber);
+        return BankAccountDAO.searchBankAccount(accountNumber);
     }
 
 
@@ -81,10 +81,10 @@ public class Bank implements IBank
         }
         else
         {
-            BankAccount bankAccount = AccountDAO.searchBankAccount(payment.getBillNumber());
+            BankAccount bankAccount = BankAccountDAO.searchBankAccount(payment.getBillNumber());
             double amount = Double.valueOf(payment.getAmount());
-            double sum = bankAccount.getBalance() + amount;
-            AccountDAO.updateBankAccount(payment.getBillNumber(), sum);
+            double saldo = bankAccount.getBalance() + amount;
+            BankAccountDAO.updateBankAccount(payment.getBillNumber(), saldo);
 
             History history = new History(bankAccount.getId(),
                     payment.getBillNumber(),
@@ -92,9 +92,9 @@ public class Bank implements IBank
                     amount,
                     0,
                     "wplata",
-                    sum);
-            AccountDAO.insertHistory(history);
-            return sum;
+                    saldo);
+            HistoryDAO.insertHistory(history);
+            return saldo;
         }
 
     }
@@ -107,22 +107,22 @@ public class Bank implements IBank
         }
         else
         {
-            BankAccount bankAccount = AccountDAO.searchBankAccount(payment.getBillNumber());
+            BankAccount bankAccount = BankAccountDAO.searchBankAccount(payment.getBillNumber());
             double amount = Double.valueOf(payment.getAmount());
-            double sum = bankAccount.getBalance() - amount;
-            if(sum < 0)
+            double saldo = bankAccount.getBalance() - amount;
+            if(saldo < 0)
                 throw new BankException("lack of money");
             else{
-                AccountDAO.updateBankAccount(payment.getBillNumber(), sum);
+                BankAccountDAO.updateBankAccount(payment.getBillNumber(), saldo);
                 History history = new History(bankAccount.getId(),
                         payment.getBillNumber(),
                         "wyplata" ,
                         0,
                         amount,
                         "wyplata",
-                        sum);
-                AccountDAO.insertHistory(history);
-                return sum;
+                        saldo);
+                HistoryDAO.insertHistory(history);
+                return saldo;
             }
 
         }
@@ -132,17 +132,22 @@ public class Bank implements IBank
 
 
     //dodanie do bazy nowego konta z loginem i haslem
-    public void createAccount(Account account) {
+    public void createAccount(Account account)throws BankException {
 
         String accountNumber;
-        AccountDAO.insertAccount(account.getName(), account.getSurname(), account.getLogin(), account.getPassword());
+        try{
+            AccountDAO.insertAccount(account);
 
-        account = AccountDAO.searchAccount(account.getLogin(), account.getPassword());
+            account = AccountDAO.searchAccount(account.getLogin(), account.getPassword());
 
-        accountNumber = String.format("%016d", (account.getId() * 10 + 5));
-        accountNumber = generateBankAccountNumber(accountNumber);
+            accountNumber = String.format("%016d", (account.getId() * 10 + 5));
+            accountNumber = generateBankAccountNumber(accountNumber);
 
-        AccountDAO.insertBankAccount(account.getId(), accountNumber, 0);
+            BankAccountDAO.insertBankAccount(account.getId(), new BankAccount(accountNumber, 0));
+        }catch(Exception e){
+            throw new BankException("repeated login");
+        }
+
 
     }
 
@@ -150,7 +155,7 @@ public class Bank implements IBank
     public ArrayList<History> getAccountHistory(int id)
     {
         ArrayList<History> historyList;
-        historyList = AccountDAO.searchHistory(id);
+        historyList = (ArrayList<History>) HistoryDAO.searchHistory(id);
 
         return historyList;
     }
@@ -159,7 +164,8 @@ public class Bank implements IBank
     public Account getAccount(int id)
     {
         Account account = AccountDAO.searchAccount(id);
-        List<BankAccount> lista = AccountDAO.searchBankAccount(id);
+
+        List<BankAccount> lista = BankAccountDAO.searchBankAccount(id);
         account.setBills(lista);
 
         return account;
@@ -186,7 +192,7 @@ public class Bank implements IBank
             throw new AccountNotFound("invalid input");
         }
         else{
-            account.setBills(AccountDAO.searchBankAccount(account.getId()));
+            account.setBills(BankAccountDAO.searchBankAccount(account.getId()));
             return account;
         }
 

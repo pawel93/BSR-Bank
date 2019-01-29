@@ -6,6 +6,6 @@ import bsr.client.RootScreen;
 
 public interface IController
 {
-    public void setScreenParent(RootScreen parent);
+    void setScreenParent(RootScreen parent);
 
 }

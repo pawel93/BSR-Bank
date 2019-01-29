@@ -1,4 +1,4 @@
-package bsr.util;
+package bsr.util.dao;
 
 import bsr.model.History;
 import com.sun.rowset.CachedRowSetImpl;
@@ -46,16 +46,34 @@ public class DBUtil
             dbConnect();
             statement = conn.createStatement();
             statement.executeUpdate("drop table if exists accounts");
-            statement.executeUpdate("CREATE TABLE accounts(" +
-                    "id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT, surname TEXT, login TEXT, password TEXT)");
+            statement.executeUpdate(
+                    "CREATE TABLE accounts(" +
+                    "id INTEGER PRIMARY KEY AUTOINCREMENT," +
+                    "name TEXT, " +
+                    "surname TEXT, " +
+                    "login TEXT NOT NULL UNIQUE, " +
+                    "password TEXT)" );
 
             statement.executeUpdate("drop table if exists bills");
-            statement.executeUpdate("CREATE TABLE bills(" +
-                    "id INTEGER, number TEXT, saldo DOUBLE)");
+            statement.executeUpdate(
+                    "CREATE TABLE bills(" +
+                    "id INTEGER, " +
+                    "type INTEGER, " +
+                    "number TEXT PRIMARY KEY, " +
+                    "saldo DOUBLE)");
 
             statement.executeUpdate("drop table if exists history");
-            statement.executeUpdate("CREATE TABLE history(" +
-                    "id INTEGER, account TEXT, title TEXT, income DOUBLE, outcome DOUBLE, source TEXT, saldo DOUBLE, date DATE )");
+            statement.executeUpdate(
+                    "CREATE TABLE history(" +
+                    "id INTEGER NOT NULL PRIMARY KEY," +
+                    " accountId INTEGER, " +
+                    "account TEXT, " +
+                    "title TEXT, " +
+                    "income DOUBLE, " +
+                    "outcome DOUBLE, " +
+                    "source TEXT, " +
+                    "saldo DOUBLE, " +
+                    "date DATE )");
 
         } catch (SQLException e) {
             e.printStackTrace();

@@ -16,8 +16,6 @@ import javax.xml.ws.BindingType;
 import java.util.ArrayList;
 
 
-
-
 @WebService
 @SOAPBinding(style = SOAPBinding.Style.DOCUMENT, use = SOAPBinding.Use.LITERAL, parameterStyle = SOAPBinding.ParameterStyle.WRAPPED)
 @BindingType(value = javax.xml.ws.soap.SOAPBinding.SOAP12HTTP_BINDING)
@@ -45,7 +43,7 @@ public interface IBank
     ArrayList<History> getAccountHistory(int id);
 
     @WebMethod
-    void createAccount(Account account);
+    void createAccount(Account account)throws BankException;
 
     @WebMethod
     @WebResult(partName = "accountResponse")
